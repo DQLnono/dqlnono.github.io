@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="移动端利用vue+mint-ui构建项目，在列表页使用Loadmore组件实现上拉下载效果。思路：  页面渲染加载，获取数据initData()； 上拉加载下拉刷新的数据请求使用initData(); initData()方法复用，加一个参数传递，区分初始化数据/拉取数据。  具体实现：  获取数据initData() 123456789101112131415//初始化获取信息async ini">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mint-ui框架的Loadmore组件使用,Element.getBoundingClientRect()设置容器高度">
+<meta property="og:url" content="http://nonoD.coding.me/2018/06/06/getBoundingClientRect/index.html">
+<meta property="og:site_name" content="DNO">
+<meta property="og:description" content="移动端利用vue+mint-ui构建项目，在列表页使用Loadmore组件实现上拉下载效果。思路：  页面渲染加载，获取数据initData()； 上拉加载下拉刷新的数据请求使用initData(); initData()方法复用，加一个参数传递，区分初始化数据/拉取数据。  具体实现：  获取数据initData() 123456789101112131415//初始化获取信息async ini">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://nonod.coding.me/2018/06/06/getBoundingClientRect/rect.png">
+<meta property="og:updated_time" content="2018-06-08T02:52:33.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="mint-ui框架的Loadmore组件使用,Element.getBoundingClientRect()设置容器高度">
+<meta name="twitter:description" content="移动端利用vue+mint-ui构建项目，在列表页使用Loadmore组件实现上拉下载效果。思路：  页面渲染加载，获取数据initData()； 上拉加载下拉刷新的数据请求使用initData(); initData()方法复用，加一个参数传递，区分初始化数据/拉取数据。  具体实现：  获取数据initData() 123456789101112131415//初始化获取信息async ini">
+<meta name="twitter:image" content="http://nonod.coding.me/2018/06/06/getBoundingClientRect/rect.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://nonoD.coding.me/2018/06/06/getBoundingClientRect/"/>
+
+
+
+
+
+  <title>mint-ui框架的Loadmore组件使用,Element.getBoundingClientRect()设置容器高度 | DNO</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">DNO</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://nonoD.coding.me/2018/06/06/getBoundingClientRect/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="DQLnono">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="DNO">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">mint-ui框架的Loadmore组件使用,Element.getBoundingClientRect()设置容器高度</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-06T16:53:19+08:00">
+                2018-06-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>移动端利用vue+mint-ui构建项目，在列表页使用Loadmore组件实现上拉下载效果。<br>思路：</p>
+<ol>
+<li>页面渲染加载，获取数据initData()；</li>
+<li>上拉加载下拉刷新的数据请求使用initData();</li>
+<li>initData()方法复用，加一个参数传递，区分初始化数据/拉取数据。</li>
+</ol>
+<p>具体实现：</p>
+<ol>
+<li><p>获取数据initData()</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//初始化获取信息</span></span><br><span class="line"><span class="keyword">async</span> initData(_pageNo)&#123;</span><br><span class="line">	<span class="keyword">if</span>(_pageNo)&#123;</span><br><span class="line">		<span class="keyword">this</span>.params.page = <span class="number">1</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.params.page++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">await</span> specialService</span><br><span class="line">		.query(<span class="keyword">this</span>.params).then(</span><br><span class="line">	 		rsp =&gt; &#123;</span><br><span class="line">	 			<span class="keyword">this</span>.data = rsp.data;</span><br><span class="line">    	&#125;)</span><br><span class="line">      .catch(<span class="function"><span class="params">error</span>=&gt;</span>&#123;</span><br><span class="line">	    &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>页面渲染加载</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mounted()&#123;</span><br><span class="line">	<span class="keyword">this</span>.$nextTick( <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">		Indicator.open(<span class="string">'加载中...'</span>);</span><br><span class="line">  	<span class="keyword">let</span> _this = <span class="keyword">this</span>;</span><br><span class="line">  	setTimeout(<span class="function"><span class="params">()</span> =&gt;</span> <span class="keyword">this</span>.initData(<span class="number">1</span>), <span class="number">1000</span>);</span><br><span class="line">	&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Loadmore组件使用</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">mt-loadmore</span> <span class="attr">:auto-fill</span>=<span class="string">"false"</span>  <span class="attr">:top-method</span>=<span class="string">"loadTop"</span> <span class="attr">:bottom-method</span>=<span class="string">"loadBottom"</span> <span class="attr">:bottom-all-loaded</span>=<span class="string">"allLoaded"</span>  <span class="attr">ref</span>=<span class="string">"loadmore"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">ul</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">li</span> <span class="attr">v-for</span>=<span class="string">"item in data.rows"</span> @<span class="attr">click</span>=<span class="string">"$router.push('detail/' + item.id)"</span> &gt;</span></span><br><span class="line">			...</span><br><span class="line">		<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">ul</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">mt-loadmore</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>autoFill——loadmore是否自动检测并撑满其容器<br>  topMethod——下拉刷新执行的方法<br>  bottomMethod——上拉加载执行的方法<br>  bottomAllLoaded——若为真，则 bottomMethod 不会被再次触发<br>  ref——vue标记元素注册引用信息，在js里使用$refs对象获取已注册的ref</p>
+</blockquote>
+</li>
+</ol>
+<ol start="4">
+<li><p>Loadmore组件的方法</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">loadTop() &#123;</span><br><span class="line">	setTimeout(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">this</span>.allLoaded = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">this</span>.initData(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">this</span>.$refs.loadmore.onTopLoaded();  </span><br><span class="line">  &#125;, <span class="number">1000</span>);</span><br><span class="line">&#125;,</span><br><span class="line">loadBottom() &#123;</span><br><span class="line">  <span class="keyword">var</span> _this=<span class="keyword">this</span>;</span><br><span class="line">  setTimeout(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.data.hasNext) &#123;</span><br><span class="line">      _this.initData();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">this</span>.allLoaded = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">this</span>.$refs.loadmore.onBottomLoaded();</span><br><span class="line">  &#125;, <span class="number">1500</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>topMethod方法在最后需要手动调用 loadmore 的 onTopLoaded 事件。这是因为在加载数据后需要对组件进行一些重新定位的操作。<br> 同理，bottomMethod方法在最后需要手动调用 loadmore 的 onBottomLoaded 事件；同时，在数据全部获取完后，bottomAllLoaded属性为true，删除组件bottomMethod方法的调用。</p>
+</blockquote>
+</li>
+</ol>
+<h5 id="问题一：上拉下载时数据更新变化"><a href="#问题一：上拉下载时数据更新变化" class="headerlink" title="问题一：上拉下载时数据更新变化"></a>问题一：上拉下载时数据更新变化</h5><p>解决：对象数据请求后直接赋值，对象被重新定义/修改，但是对象里的数组应该合并，不能直接赋值覆盖。<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(_pageNo)&#123;</span><br><span class="line">	<span class="keyword">this</span>.params.page = <span class="number">1</span>;</span><br><span class="line">	<span class="keyword">this</span>.data = &#123;&#125;;<span class="comment">//刷新请求，数据清空</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//数据loadmore处理</span></span><br><span class="line"><span class="keyword">let</span> rows = <span class="keyword">this</span>.data.rows ? <span class="keyword">this</span>.data.rows : [];</span><br><span class="line"><span class="keyword">this</span>.data = rsp.data;</span><br><span class="line"><span class="keyword">this</span>.data.rows = [...rows,...this.data.rows];<span class="comment">//数组合并</span></span><br></pre></td></tr></table></figure></p>
+<h5 id="问题二：列表没有如预期一样可以上拉下载-而是不能滑动页面，并且开发者工具查看，滑动触发上拉下载的数据请求。"><a href="#问题二：列表没有如预期一样可以上拉下载-而是不能滑动页面，并且开发者工具查看，滑动触发上拉下载的数据请求。" class="headerlink" title="问题二：列表没有如预期一样可以上拉下载,而是不能滑动页面，并且开发者工具查看，滑动触发上拉下载的数据请求。"></a>问题二：列表没有如预期一样可以上拉下载,而是不能滑动页面，并且开发者工具查看，滑动触发上拉下载的数据请求。</h5><p>解决：使用容器包含Loadmore组件，给定容器高度，超出容器滚动。考虑移动端屏幕不固定，页面存在一个头部，使用calc属性可以设定容器高度，查看mini-ui的demo发现，在组件渲染时，计算设定容器高度。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;div style=&quot;overflow: scroll;&quot; ref=&quot;wrapper&quot; :style=&quot;&#123; height: wrapperHeight + &apos;px&apos; &#125;&quot;&gt;&lt;/div&gt;</span><br><span class="line">this.wrapperHeight = document.documentElement.clientHeight - this.$refs.wrapper.getBoundingClientRect().top;</span><br></pre></td></tr></table></figure>
+<p>纠正：页面不能滑动是父元素/body设置了overflow:hidden的属性；如上方法，修改的一种效果是，头部固定在顶部，内容块溢出滑动。</p>
+<h3 id="思考："><a href="#思考：" class="headerlink" title="思考："></a>思考：</h3><p> Element.getBoundingClientRect()方法返回元素的大小及其相对于视口的位置。<br> 根据 <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/Element/getBoundingClientRect" target="_blank" rel="noopener">MDN</a> 的资料表示，getBoundingClientRect()获取元素的矩形（css边框）集合对象。<br> <img src="/2018/06/06/getBoundingClientRect/rect.png" title="MDN图示"></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/05/form-valid/" rel="next" title="vue+element-ui的自定义表单校验">
+                <i class="fa fa-chevron-left"></i> vue+element-ui的自定义表单校验
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/07/mixins/" rel="prev" title="mixins">
+                mixins <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">DQLnono</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#问题一：上拉下载时数据更新变化"><span class="nav-number">1.</span> <span class="nav-text">问题一：上拉下载时数据更新变化</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#问题二：列表没有如预期一样可以上拉下载-而是不能滑动页面，并且开发者工具查看，滑动触发上拉下载的数据请求。"><span class="nav-number">2.</span> <span class="nav-text">问题二：列表没有如预期一样可以上拉下载,而是不能滑动页面，并且开发者工具查看，滑动触发上拉下载的数据请求。</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#思考："><span class="nav-number"></span> <span class="nav-text">思考：</span></a></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">DQLnono</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
