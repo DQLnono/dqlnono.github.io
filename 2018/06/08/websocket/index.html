@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="WebSocketWebSocket是HTML5提供的一种协议（可在单个TCP连接上进行全双工通讯）。使用WebSocket协议建立的通道是双向的，客户端向服务器端发送WebSocket连接请求，服务器端响应支持使用WebSocket协议建立连接后，浏览器和服务器端就可以开始对话了，并且是双向的。客户端可以通过send()方法向服务器端发送信息，同样的服务器端也可以主动向客户端发送信息，客户端通过">
+<meta property="og:type" content="article">
+<meta property="og:title" content="认识WebSocket、SockJS、STOMP以及它们之间的关系">
+<meta property="og:url" content="https://dqlnono.github.io/2018/06/08/websocket/index.html">
+<meta property="og:site_name" content="DNO博客">
+<meta property="og:description" content="WebSocketWebSocket是HTML5提供的一种协议（可在单个TCP连接上进行全双工通讯）。使用WebSocket协议建立的通道是双向的，客户端向服务器端发送WebSocket连接请求，服务器端响应支持使用WebSocket协议建立连接后，浏览器和服务器端就可以开始对话了，并且是双向的。客户端可以通过send()方法向服务器端发送信息，同样的服务器端也可以主动向客户端发送信息，客户端通过">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://dqlnono.github.io/2018/06/08/websocket/websocket.jpg">
+<meta property="og:image" content="https://dqlnono.github.io/2018/06/08/websocket/frames.jpg">
+<meta property="og:updated_time" content="2018-06-12T09:46:06.998Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="认识WebSocket、SockJS、STOMP以及它们之间的关系">
+<meta name="twitter:description" content="WebSocketWebSocket是HTML5提供的一种协议（可在单个TCP连接上进行全双工通讯）。使用WebSocket协议建立的通道是双向的，客户端向服务器端发送WebSocket连接请求，服务器端响应支持使用WebSocket协议建立连接后，浏览器和服务器端就可以开始对话了，并且是双向的。客户端可以通过send()方法向服务器端发送信息，同样的服务器端也可以主动向客户端发送信息，客户端通过">
+<meta name="twitter:image" content="https://dqlnono.github.io/2018/06/08/websocket/websocket.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://dqlnono.github.io/2018/06/08/websocket/"/>
+
+
+
+
+
+  <title>认识WebSocket、SockJS、STOMP以及它们之间的关系 | DNO博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">DNO博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://dqlnono.github.io/2018/06/08/websocket/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="DQLnono">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="DNO博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">认识WebSocket、SockJS、STOMP以及它们之间的关系</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-08T16:52:44+08:00">
+                2018-06-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="WebSocket"><a href="#WebSocket" class="headerlink" title="WebSocket"></a>WebSocket</h2><p>WebSocket是HTML5提供的一种协议（可在单个TCP连接上进行全双工通讯）。<br>使用WebSocket协议建立的通道是双向的，客户端向服务器端发送WebSocket连接请求，服务器端响应支持使用WebSocket协议建立连接后，浏览器和服务器端就可以开始对话了，并且是双向的。客户端可以通过send()方法向服务器端发送信息，同样的服务器端也可以主动向客户端发送信息，客户端通过onmessage 事件监听接收信息。通道建立后，信息传递是双向的，通道关闭也是一个命令信息，那么无论是客户端还是服务器端都可以关闭连接。</p>
+<h3 id="建立连接（创建WebSocket对象）："><a href="#建立连接（创建WebSocket对象）：" class="headerlink" title="建立连接（创建WebSocket对象）："></a>建立连接（创建WebSocket对象）：</h3><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Socket = <span class="keyword">new</span> WebSocket(url, [protocol] );</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>url：服务器端地址；protocol：可选，指定可接受的子协议。</p>
+</blockquote>
+<h3 id="WebSocket对象提供了两个属性、四个事件、两个方法，分别是："><a href="#WebSocket对象提供了两个属性、四个事件、两个方法，分别是：" class="headerlink" title="WebSocket对象提供了两个属性、四个事件、两个方法，分别是："></a>WebSocket对象提供了两个属性、四个事件、两个方法，分别是：</h3><ol>
+<li><p>WebSocket.readyState属性：表示连接状态</p>
+<blockquote>
+<p>0——（连接尚未建立）；1——（连接已建立）；2——（连接正在关闭）；3——（连接已经关闭或连接不能打开）</p>
+</blockquote>
+</li>
+<li><p>WebSocket.bufferedAmount属性：被send()放入传输队列，还未发出的UTF-8文本字节数</p>
+<blockquote>
+<p>事件调用有两个方法，一种是监听事件，一种是直接使用事件处理程序。</p>
+</blockquote>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ws.addEventListener(<span class="string">'open'</span>, <span class="function"><span class="keyword">function</span> (<span class="params">event</span>) </span>&#123;</span><br><span class="line">  ws.send(<span class="string">'Hello Server!'</span>);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">ws.onopen = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  ws.send(<span class="string">'Hello Server!'</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>open：WebSocket.onopen()：连接建立时触发的事件</p>
+</li>
+<li>message：WebSocket.onmessage()： 客户端接收服务器端发送的信息时触发</li>
+<li>error：WebSocket.onerror()：通信发生错误时触发</li>
+<li>close：WebSocket.onclose()：连接关闭时触发</li>
+<li>WebSocket.send()：发送信息的方法</li>
+<li>WebSocket.close()：关闭连接方法</li>
+</ol>
+<h3 id="示例："><a href="#示例：" class="headerlink" title="示例："></a>示例：</h3><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> ws = <span class="keyword">new</span> WebSocket(<span class="string">'wss://echo.websocket.org'</span>);</span><br><span class="line"></span><br><span class="line">ws.onopen = <span class="function">(<span class="params">evt</span>) =&gt;</span> &#123; </span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'Connection open ...'</span>); </span><br><span class="line">  ws.send(<span class="string">'Hello WebSockets!'</span>);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">ws.onmessage = <span class="function">(<span class="params">evt</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log( <span class="string">'Received Message: '</span> + evt.data);</span><br><span class="line">  ws.close();</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">ws.onclose = <span class="function">(<span class="params">evt</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'Connection closed.'</span>);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="开发者开发者工具查看WebSocket"><a href="#开发者开发者工具查看WebSocket" class="headerlink" title="开发者开发者工具查看WebSocket"></a>开发者开发者工具查看WebSocket</h3><p>f12打开开发者工具，点击network选项可已查看所有请求，过滤选择WS可以看到WebSocket的请求<br><img src="/2018/06/08/websocket/websocket.jpg" title="开发者工具WS"></p>
+<p>在Headers，可以查看到一下参数：</p>
+<ol>
+<li><p>request</p>
+<ul>
+<li>Connection: Upgrade </li>
+<li>Upgrade: websocket  (连接升级使用WebSocket协议)</li>
+<li>Sec-WebSocket-Extensions: </li>
+<li>Sec-WebSocket-Key: (验证服务器是否支持websocket)</li>
+<li>Sec-WebSocket-Versions: (浏览器支持的websocket版本号)</li>
+</ul>
+</li>
+<li><p>response</p>
+<ul>
+<li>Sec-WebSocket-Accept: (与浏览器提供的Key对应算法：=base64(hsal(key + 258EAFA5-E914-47DA-95CA-C5AB0DC85B11”)) ) </li>
+<li>Sec-WebSocket-Extensions: </li>
+</ul>
+</li>
+</ol>
+<p>在frames可以查看建立连接后的数据传输<br><img src="/2018/06/08/websocket/frames.jpg" title="数据传输"></p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><ul>
+<li><a href="http://www.ruanyifeng.com/blog/2017/05/websocket.html" target="_blank" rel="noopener">WebSocket 教程</a></li>
+<li><a href="http://www.runoob.com/html/html5-websocket.html" target="_blank" rel="noopener">HTML5 WebSocket</a></li>
+</ul>
+<h2 id="SockJS"><a href="#SockJS" class="headerlink" title="SockJS"></a>SockJS</h2><p><a href="https://github.com/sockjs/sockjs-client" target="_blank" rel="noopener">SockJS</a>是一个浏览器JavaScript库，它提供了一个类似websosocket的对象。SockJS为您提供了一个连贯的、跨浏览器的Javascript API，它在浏览器和web服务器之间创建了一个低延迟、全双工、跨域通信通道。<br>WebSocket是HTML5新增的特性，一些浏览器可能不支持，类似于css的回退机制，SockJS就是对于WebSocket的一种回退机制。优先使用原生的WebSocket，当浏览器不支持WebSocket时，使用其他传输协议/轮询或者其他方法去实现WebSocket。<br>对应的，客户端使用<a href="https://github.com/sockjs/sockjs-client" target="_blank" rel="noopener">SockJS-client</a>，服务器—— <a href="https://github.com/sockjs/sockjs-node" target="_blank" rel="noopener">SockJS-node</a>…</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> sockjs = <span class="keyword">new</span> SockJS(url, _reserved, options);</span><br></pre></td></tr></table></figure>
+<p>options:</p>
+<ul>
+<li>server(string)：添加到url的字符串，默认为随机的4位数</li>
+<li>transports (string OR array of strings)：回退传输列表</li>
+<li>sessionId (number OR function)：会话标识，函数必须返回一个随机生成的字符串</li>
+</ul>
+<p>使用：</p>
+<ol>
+<li><p>js引入</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>建立连接使用</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> sock = <span class="keyword">new</span> SockJS(<span class="string">'http://***'</span>);</span><br><span class="line">sock.onopen = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'open'</span>);</span><br><span class="line">    sock.send(<span class="string">'test'</span>);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">sock.onmessage = <span class="function"><span class="keyword">function</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'message'</span>, e.data);</span><br><span class="line">    sock.close();</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">sock.onclose = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'close'</span>);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="参考-1"><a href="#参考-1" class="headerlink" title="参考"></a>参考</h3><ul>
+<li><a href="https://github.com/sockjs/sockjs-client" target="_blank" rel="noopener">SockJS-client</a></li>
+</ul>
+<h2 id="STOMP"><a href="#STOMP" class="headerlink" title="STOMP"></a>STOMP</h2><p><a href="http://jmesnil.net/stomp-websocket/doc/" target="_blank" rel="noopener">STOMP</a>是一个简单的面向文本的消息传递协议。定义了一种可互操作的连接格式，便于可用的STOMP客户端与任意STOMP消息代理（Broker）进行通信。<br>我理解的STOMP就是对WebSocket协议的一个封装协议，好比http与tcp的关系；STOMP提供的订阅功能，。。。</p>
+<h3 id="参考-2"><a href="#参考-2" class="headerlink" title="参考"></a>参考</h3><ul>
+<li><a href="http://jmesnil.net/stomp-websocket/doc/" target="_blank" rel="noopener">STOMP Over WebSocket</a></li>
+<li><a href="https://segmentfault.com/a/1190000006617344" target="_blank" rel="noopener">Stomp Over Websocket文档</a></li>
+<li><a href="https://blog.csdn.net/jqsad/article/details/77745379" target="_blank" rel="noopener">STOMP 客户端 API 整理</a></li>
+</ul>
+<h2 id="关系"><a href="#关系" class="headerlink" title="关系"></a>关系</h2><p>WebSocket和http一样，是对数据发送获取的一种协议，都是面对TCP，但是WebSocket的兼容性没有HTTP强大咯，所以SockJS出来打捞它，在浏览器不支持的情况，回退使用其他方法实现应用；而STOMP则是WebSocket的封装协议，让WebSocket格式规范化。可能我现在的理解有错，之后会不断改进更新的。</p>
+<h3 id="参考-3"><a href="#参考-3" class="headerlink" title="参考"></a>参考</h3><ul>
+<li><a href="https://wdd.js.org/websocket-close-reasons.html" target="_blank" rel="noopener">WebSocket断开原因分析</a></li>
+<li><a href="https://wdd.js.org/vue-ws-monitor-agent-status.html" target="_blank" rel="noopener">Vue+websocket+stompjs 实时监控坐席状态demo</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/07/mixins/" rel="next" title="Vue mixins的初识和使用">
+                <i class="fa fa-chevron-left"></i> Vue mixins的初识和使用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">DQLnono</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#WebSocket"><span class="nav-number">1.</span> <span class="nav-text">WebSocket</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#建立连接（创建WebSocket对象）："><span class="nav-number">1.1.</span> <span class="nav-text">建立连接（创建WebSocket对象）：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WebSocket对象提供了两个属性、四个事件、两个方法，分别是："><span class="nav-number">1.2.</span> <span class="nav-text">WebSocket对象提供了两个属性、四个事件、两个方法，分别是：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#示例："><span class="nav-number">1.3.</span> <span class="nav-text">示例：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#开发者开发者工具查看WebSocket"><span class="nav-number">1.4.</span> <span class="nav-text">开发者开发者工具查看WebSocket</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考"><span class="nav-number">1.5.</span> <span class="nav-text">参考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SockJS"><span class="nav-number">2.</span> <span class="nav-text">SockJS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#参考-1"><span class="nav-number">2.1.</span> <span class="nav-text">参考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#STOMP"><span class="nav-number">3.</span> <span class="nav-text">STOMP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#参考-2"><span class="nav-number">3.1.</span> <span class="nav-text">参考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关系"><span class="nav-number">4.</span> <span class="nav-text">关系</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#参考-3"><span class="nav-number">4.1.</span> <span class="nav-text">参考</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">DQLnono</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
